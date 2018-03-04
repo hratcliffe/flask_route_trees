@@ -61,7 +61,7 @@ class flask_route:
 		for item in self.path:
 			pstr += str(item)
 			pstr +='/'
-		return pstr[1:-1]
+		return pstr[0:-1]
 	def __eq__(self, other):
 		if len(self.path) != len(other.path):
 			return False
@@ -114,13 +114,16 @@ class flask_placeholder(route_section):
 def select_match(route, options):
 	#Select 'best' parent for route
 	#All match, so go left to right favouring higher precedence
+	if len(options) == 1:
+		return options[0]
 	layer_opts = []
 	layer = 0
 	matches = deepcopy(options)
 	for section in route.path[0:-1]:
-		layer_opts = [opt.path[layer] for opt in matches]
+		layer_opts = [opt.path[layer] for opt in matches if len(opt.path)>layer]
 		best = select_precedence(section, layer_opts)
-		matches = [match for match in matches if match.path[layer] == best]
+		matches = [match for match in matches if (len(match.path)>layer and match.path[layer] == best) or (len(match.path) <= layer)]
+
 		layer += 1
 	#Now we have all 'matching' we want to order them
 	matches = order_matches(matches, route)
@@ -131,14 +134,14 @@ def select_match(route, options):
 		return None
 	
 def select_precedence(section, options):
-	#Select the correct match for route
+	#Select the correct match for route section from options
 	#E.g if have 'abc' and '<string:item>' options abc matches first
-	#We match naively for now, assuming a placeholder matches to a placeholder and a string to a string, unless there is no string
+	#We match naively for now, assuming a placeholder matches to a placeholder and a string to a string, unless there is no string, when a placeholder will do
 	choice = None
 	second_choice = None
 	for item in options:
-		if isinstance(section, flask_placeholder):
-			if isinstance(item, flask_placeholder):
+		if isinstance(item, flask_placeholder):
+			if isinstance(section, flask_placeholder):
 				choice = item
 				#This doesn't handle overlapping placeholders at all
 				break
@@ -157,6 +160,7 @@ def order_matches(matches, target):
 	#Placeholder type ordering depends on target
 	#Precedence is left to right
 	#Strings are better than placeholders. Longer is better than shorter
+	#Want some sort of heuristic for length versus matchyness
 
 	lengthed_matches = []
 	for item in matches:
@@ -165,7 +169,8 @@ def order_matches(matches, target):
 		for piece in item.path:
 			match_spec.append(matchness(piece, target.path[layer]))
 			layer = layer + 1
-		lengthed_matches.append((match_spec, item))
+		match_val = sum(match_spec)
+		lengthed_matches.append((match_val, item))
 	return [match[1] for match in sorted(lengthed_matches, key = lambda mat : mat[0])]
 	
 def matchability(section):
@@ -183,12 +188,16 @@ def matchness(section, option):
 		return 0
 	if isinstance(section, flask_placeholder):
 		if isinstance(option, flask_placeholder):
-			return 1
+			return 4 #Placeholder - placeholder
 		else:
-			return 2
+			return 1 #Placeholder - string
 	else:
 		if option.value == section.value:
-			return 3
+			return 6 #String - string
+		elif isinstance(option, flask_placeholder):
+			return 2 #String - placeholder
+		else:
+			return 0
 
 #Find the Blueprint spec. This gives the name for routing
 #Returns tuple of the app name and the blueprint call node
@@ -270,8 +279,12 @@ def parse_flask_routing(url):
 
 def parse_routing(ast):
 	
+	all_nodes = get_nodes(ast)
+	app = identify_app(ast)
+	return generate_tree(app, all_nodes)
+
+def get_nodes(ast):
 	#All_nodes is dict mapping routes to nodes
-	#'Tree' is then created where each node holds its children
 	all_nodes = {}
 	for item in ast.nodes_of_class(_fn_type):
 		node = simple_node()
@@ -283,25 +296,11 @@ def parse_routing(ast):
 		
 		#Add to dict keyed on route
 		all_nodes[node.route[0]] = node
-	#return all_nodes
-	app = identify_app(ast)
-	return generate_tree(app, all_nodes)
+	return all_nodes
 
 def generate_tree(app, all_nodes):
 	#Generate a list of lists where each entry is a level in our tree
-	route_tree = []
-	all_routes = all_nodes.keys()
-	all_unpacked_routes = []
-	for item in all_routes:
-		flask_route = parse_flask_routing(item)
-		depth = len(flask_route.path)
-		if len(route_tree) > depth:
-			route_tree[depth].append(flask_route)
-		else:
-			route_tree.extend([[] for _ in range(depth - len(route_tree) + 1)])
-			route_tree[depth].append(flask_route)
-		all_unpacked_routes.append(flask_route)
-	#return all_unpacked_routes
+	all_unpacked_routes, route_tree = unpack_routes_and_tree(all_nodes)
 	#route_tree is now layered lists 
 	#Now fill in parent info, and put children under parents
 	if app:
@@ -318,14 +317,33 @@ def generate_tree(app, all_nodes):
 			except:
 				try:
 					#Perhaps there's no trailing slash
-					all_nodes[str_notr(parent)].children.append(item)
+					all_nodes[parent.str_notr()].children.append(item)
 				except Exception as e:
-					print e
+					print 'Error 1', str(e)
 			try:
 				all_nodes[str(item)].parent = parent
 			except Exception as e:
-				print e
+				try:
+					all_nodes[item.str_notr()].parent = parent
+				except:
+					print 'Error 2', str(e), 'on', str(item), item.str_notr()
 	return tree_root, all_nodes
+
+def unpack_routes_and_tree(all_nodes):
+
+	all_routes = all_nodes.keys()
+	all_unpacked_routes = []
+	route_tree = []
+	for item in all_routes:
+		flask_route = parse_flask_routing(item)
+		depth = len(flask_route.path)
+		if len(route_tree) > depth:
+			route_tree[depth].append(flask_route)
+		else:
+			route_tree.extend([[] for _ in range(depth - len(route_tree) + 1)])
+			route_tree[depth].append(flask_route)
+		all_unpacked_routes.append(flask_route)
+	return all_unpacked_routes, route_tree
 
 def get_parent(route, all_routes):
 	#Find next url up and return
@@ -337,13 +355,11 @@ def get_parent(route, all_routes):
 		return None
 	potential = deepcopy(route)
 	all_matches = []
-	found = False
-	while(not found):
+	while(len(potential.path) > 0):
 		potential = flask_route(potential.path[0:-1])
 		for rt in all_routes:
 			if potential == rt:
 				all_matches.append(rt)
-				found = True
 	parent = select_match(route, all_matches)
 	return parent
 

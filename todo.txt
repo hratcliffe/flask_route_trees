@@ -5,7 +5,16 @@ DONE Handle ':' in graphviz
 
 Support multiple routes for one endpoint
 
-Fix routing when parent is more than 1 level up
+DONE sorta Fix routing when parent is more than 1 level up
+  This means we don't favour length IF a shorter path matches string wise
+  Hmm, this needs something a bit more sophisticated...
 
-Better matchinf of placeholder strings
+  Compromised by using a heuristic matchyness. Exact string match beats a longer placeholder string
+  This will probably do strange things in complicated cases
+
+Better matching of placeholder strings
+
+DONE Deal with trailing slash absence
+
+Style according to return (page vs data)
 
