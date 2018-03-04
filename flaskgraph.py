@@ -308,7 +308,6 @@ def generate_tree(app, all_nodes):
 			parent = get_parent(item, all_unpacked_routes)
 			if parent is None:
 				parent = tree_root.route
-			print 'Parent ', parent
 			try:
 				all_nodes[str(parent)].children.append(item)
 			except:
@@ -341,8 +340,6 @@ def get_parent(route, all_routes):
 				all_matches.append(rt)
 				found = True
 	parent = select_match(route, all_matches)
-	print 'Target', route
-	print 'Chose', parent
 	return parent
 
 
