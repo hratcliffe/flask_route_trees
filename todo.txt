@@ -1,5 +1,5 @@
 
-Add app name at root
+DONE Add app name at root
 
 DONE Handle ':' in graphviz
 

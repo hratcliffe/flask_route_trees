@@ -364,7 +364,7 @@ def tree_to_graphviz(tree):
 
 	dot = graphviz.Digraph(comment='Routing for App', format='png')
 	dot.attr(fontsize='12')
-
+	dot.node(tree[0].safe_name)
 	for item in tree[1]:
 		if item:
 			if tree[1][item].login[0]:
@@ -376,7 +376,7 @@ def tree_to_graphviz(tree):
 			if tree[1][item].parent:
 				dot.edge(tree[1][str(tree[1][item].parent)].safe_name, tree[1][item].safe_name)
 			else:
-				dot.edge('app', tree[1][item].safe_name)
+				dot.edge(tree[0].safe_name, tree[1][item].safe_name)
 	return dot
 
 if __name__ == '__main__':
