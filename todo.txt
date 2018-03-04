@@ -16,5 +16,7 @@ Better matching of placeholder strings
 
 DONE Deal with trailing slash absence
 
-Style according to return (page vs data)
+DONE Style according to return (page vs data)
+
+Add Get/Post embelishments
 

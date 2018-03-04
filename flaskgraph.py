@@ -9,8 +9,11 @@ _import_type = astroid.node_classes.Import
 _assign_type = astroid.node_classes.Assign
 _call_type = astroid.node_classes.Call
 _decorator_type = astroid.node_classes.Decorators
-_attirbute_type = astroid.node_classes.Attribute
+_attribute_type = astroid.node_classes.Attribute
+_return_type = astroid.node_classes.Return
 _blueprint_identifier = 'Blueprint'
+
+_type_strings = ['none', 'json', 'page', 'other']
 
 #Simple node contains
 	#Function name
@@ -23,7 +26,7 @@ class simple_node:
 		self.safe_name = self.make_safe(name)
 		self.route = route
 		self.login = None
-		self.ret_type = None
+		self.type = None
 		
 		self.parent = None
 		self.children = []
@@ -36,8 +39,8 @@ class simple_node:
 		self.route = route
 	def set_login(self, login):
 		self.login = login
-	def set_ret_type(self, ret_type):
-		self.ret_type = ret_type
+	def set_type(self, type):
+		self.type = type
 	def make_safe(self, name):
 		#Make a name which is safe for DOT and Graphviz to use
 		return name.replace(':', '_')
@@ -247,6 +250,22 @@ def get_route_decorator(function):
 				pass
 	return (route, routing)
 
+def get_type(function):
+	#Return tuple (return string type, return object)
+	#If more than one return, tries to give representative
+	#Since we can't run the code, we're just looking for a few tip-offs
+	return_opt = ('none', None)
+	secondary_return_opt = ('none', None)
+	for item in function.body:
+		if type(item) == _return_type:
+			if 'jsonify' in item.as_string():
+				return_opt = ('json', item)
+			elif '{' in item.as_string():
+				secondary_return_opt = ('json', item)
+			elif 'render_template' in item.as_string():
+				return_opt = ('page', item)
+	return return_opt
+
 def split_url_path(url):
 	#Split url into chunks
 	return url.split('/')
@@ -291,8 +310,7 @@ def get_nodes(ast):
 		node.set_name(item.name)
 		node.set_route(get_route_decorator(item))
 		node.set_login(get_login_decorator(item))
-		#Find return type info
-		#TBC
+		node.set_type(get_type(item))
 		
 		#Add to dict keyed on route
 		all_nodes[node.route[0]] = node
@@ -382,11 +400,13 @@ def tree_to_graphviz(tree):
 	dot.attr(fontsize='12')
 	dot.node(tree[0].safe_name, shape='doubleoctagon')
 	for item in tree[1]:
+		box = 'oval'
 		if item:
+			if tree[1][item].type[0]=='json': box = 'box'
 			if tree[1][item].login[0]:
-				dot.node(tree[1][item].safe_name, str(item), style='filled', fillcolor='gray')
+				dot.node(tree[1][item].safe_name, str(item), style='filled', fillcolor='gray', shape = box)
 			else:
-				dot.node(tree[1][item].safe_name, str(item))
+				dot.node(tree[1][item].safe_name, str(item), shape=box)
 	for item in tree[1]:
 		if item:
 			if tree[1][item].parent:
