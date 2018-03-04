@@ -422,7 +422,7 @@ def basic_show_tree(tree, nodes):
 
 def tree_to_graphviz(tree):
 
-	dot = graphviz.Digraph(comment='Routing for App. Grey nodes require login', format='png')
+	dot = graphviz.Digraph(comment='Routing for App. Grey nodes require login. Ovals are pages, boxes are data (json). Embellishments indicate methods were specified', format='png')
 	dot.attr(fontsize='12')
 	dot.node(tree[0].safe_name, shape='doubleoctagon')
 	for item in tree[1]:
@@ -444,13 +444,22 @@ def tree_to_graphviz(tree):
 				dot.edge(tree[0].safe_name, tree[1][item].safe_name)
 	return dot
 
-if __name__ == '__main__':
-
-	filename = 'example.py'
+def generate_routing(filename):
 	MAN = astroid.MANAGER
 	ast = MAN.ast_from_file(filename, source=True)
 	tree = parse_routing(ast)
 	dot = tree_to_graphviz(tree)
-	dot.render('app.png', view=True)
-	dot.view()
+	
+	output_name = tree[0].name
+	if output_name == '':
+		output_name = filename
+	dot.render(output_name, view=True)
+
+if __name__ == '__main__':
+
+	try: input = raw_input
+	except NameError: pass
+	
+	input('Filename to parse:', filename)
+	generate_routing(filename)
 	
