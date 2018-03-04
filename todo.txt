@@ -18,5 +18,5 @@ DONE Deal with trailing slash absence
 
 DONE Style according to return (page vs data)
 
-Add Get/Post embelishments
+DONE Add Get/Post embelishments
 

@@ -14,6 +14,7 @@ _return_type = astroid.node_classes.Return
 _blueprint_identifier = 'Blueprint'
 
 _type_strings = ['none', 'json', 'page', 'other']
+_method_strings = ['get', 'post']
 
 #Simple node contains
 	#Function name
@@ -27,6 +28,7 @@ class simple_node:
 		self.route = route
 		self.login = None
 		self.type = None
+		self.methods = None
 		
 		self.parent = None
 		self.children = []
@@ -41,6 +43,8 @@ class simple_node:
 		self.login = login
 	def set_type(self, type):
 		self.type = type
+	def set_methods(self, methods):
+		self.methods = methods
 	def make_safe(self, name):
 		#Make a name which is safe for DOT and Graphviz to use
 		return name.replace(':', '_')
@@ -266,6 +270,27 @@ def get_type(function):
 				return_opt = ('page', item)
 	return return_opt
 
+def get_methods(function):
+	#Return methods string (see _methods_strings)
+	route = get_route_decorator(function)
+	if not route[1]:
+		return []
+	keywds = route[1].keywords
+	meth = []
+	if not keywds:
+		return []
+	for wd in keywds:
+		if wd.arg == 'methods':
+			meth = wd.value.as_string()
+	reg = re.compile('\[(.*)\]')
+	match = re.match(reg, meth)
+	if match is not None:
+		grps = match.groups()[0].split(',')
+		for item in grps:
+			item = item.strip()
+	
+	return grps
+
 def split_url_path(url):
 	#Split url into chunks
 	return url.split('/')
@@ -311,6 +336,7 @@ def get_nodes(ast):
 		node.set_route(get_route_decorator(item))
 		node.set_login(get_login_decorator(item))
 		node.set_type(get_type(item))
+		node.set_methods(get_methods(item))
 		
 		#Add to dict keyed on route
 		all_nodes[node.route[0]] = node
@@ -401,12 +427,15 @@ def tree_to_graphviz(tree):
 	dot.node(tree[0].safe_name, shape='doubleoctagon')
 	for item in tree[1]:
 		box = 'oval'
+		styles = []
 		if item:
 			if tree[1][item].type[0]=='json': box = 'box'
+			if tree[1][item].methods != [] : styles.append('diagonals')
 			if tree[1][item].login[0]:
-				dot.node(tree[1][item].safe_name, str(item), style='filled', fillcolor='gray', shape = box)
+				styles.append('filled')
+				dot.node(tree[1][item].safe_name, str(item), style=','.join(styles), fillcolor='gray', shape = box)
 			else:
-				dot.node(tree[1][item].safe_name, str(item), shape=box)
+				dot.node(tree[1][item].safe_name, str(item), shape=box, style=','.join(styles))
 	for item in tree[1]:
 		if item:
 			if tree[1][item].parent:
