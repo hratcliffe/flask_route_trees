@@ -362,13 +362,13 @@ def basic_show_tree(tree, nodes):
 
 def tree_to_graphviz(tree):
 
-	dot = graphviz.Digraph(comment='Routing for App', format='png')
+	dot = graphviz.Digraph(comment='Routing for App. Grey nodes require login', format='png')
 	dot.attr(fontsize='12')
-	dot.node(tree[0].safe_name)
+	dot.node(tree[0].safe_name, shape='doubleoctagon')
 	for item in tree[1]:
 		if item:
 			if tree[1][item].login[0]:
-				dot.node(tree[1][item].safe_name, str(item), shape='box')
+				dot.node(tree[1][item].safe_name, str(item), style='filled', fillcolor='gray')
 			else:
 				dot.node(tree[1][item].safe_name, str(item))
 	for item in tree[1]:
