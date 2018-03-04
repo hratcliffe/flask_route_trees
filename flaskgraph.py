@@ -4,8 +4,6 @@ import re
 import graphviz
 from copy import deepcopy
 
-MAN = astroid.MANAGER
-
 _fn_type = astroid.scoped_nodes.FunctionDef
 _import_type = astroid.node_classes.Import
 _assign_type = astroid.node_classes.Assign
@@ -360,34 +358,32 @@ def basic_show_tree(tree, nodes):
 			level_str = level_str + '\t'
 		print level_str
 
-def tree_to_dotfile(root, tree, filename):
-	dot_file = open(filename, 'w')
-	dot_file.write('graph app {')
-	dot_file.write('app;')
-	for item in tree:
-		if item:
-			dot_file.write('"'+str(item)+'"'+'[shape=box]')
-			dot_file.write(';\n')
+def tree_to_graphviz(tree):
 
-	for item in tree:
+	dot = graphviz.Digraph(comment='Routing for App', format='png')
+	dot.attr(fontsize='12')
+
+	for item in tree[1]:
 		if item:
-			if tree[item].parent:
-				dot_file.write('"'+str(tree[item].parent)+'" -- "'+str(item)+'"')
-				dot_file.write(';\n')
+			if tree[1][item].login[0]:
+				dot.node(str(item).replace(':', '_'), shape='box')
 			else:
-				dot_file.write('app -- "'+str(item)+'"')
-				dot_file.write(';\n')
-
-#	while(children):
-#		for child in children:
-#			dot_file.write(current + '--' + child)
-	dot_file.write('}')
-	dot_file.close()
+				dot.node(str(item).replace(':', '_'))
+	for item in tree[1]:
+		if item:
+			if tree[1][item].parent:
+				dot.edge(str(tree[1][item].parent).replace(':', '_'), str(item).replace(':', '_'))
+			else:
+				dot.edge('app', str(item).replace(':', '_'))
+	return dot
 
 if __name__ == '__main__':
 
 	filename = 'example.py'
-	
+	MAN = astroid.MANAGER
 	ast = MAN.ast_from_file(filename, source=True)
 	tree = parse_routing(ast)
-	dot = tree_to_dotfile(tree[0], tree[1], 'app.dot')
+	dot = tree_to_graphviz(tree)
+	dot.render('app.png', view=True)
+	dot.view()
+	
