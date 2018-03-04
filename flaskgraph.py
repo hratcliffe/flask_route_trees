@@ -20,6 +20,7 @@ _blueprint_identifier = 'Blueprint'
 class simple_node:
 	def __init__(self, name='', route=None):
 		self.name = name
+		self.safe_name = self.make_safe(name)
 		self.route = route
 		self.login = None
 		self.ret_type = None
@@ -30,12 +31,16 @@ class simple_node:
 
 	def set_name(self, name):
 		self.name = name
+		self.safe_name = self.make_safe(name)
 	def set_route(self, route):
 		self.route = route
 	def set_login(self, login):
 		self.login = login
 	def set_ret_type(self, ret_type):
 		self.ret_type = ret_type
+	def make_safe(self, name):
+		#Make a name which is safe for DOT and Graphviz to use
+		return name.replace(':', '_')
 
 class flask_route:
 	def __init__(self, path = []):
@@ -363,15 +368,15 @@ def tree_to_graphviz(tree):
 	for item in tree[1]:
 		if item:
 			if tree[1][item].login[0]:
-				dot.node(str(item).replace(':', '_'), shape='box')
+				dot.node(tree[1][item].safe_name, str(item), shape='box')
 			else:
-				dot.node(str(item).replace(':', '_'))
+				dot.node(tree[1][item].safe_name, str(item))
 	for item in tree[1]:
 		if item:
 			if tree[1][item].parent:
-				dot.edge(str(tree[1][item].parent).replace(':', '_'), str(item).replace(':', '_'))
+				dot.edge(tree[1][str(tree[1][item].parent)].safe_name, tree[1][item].safe_name)
 			else:
-				dot.edge('app', str(item).replace(':', '_'))
+				dot.edge('app', tree[1][item].safe_name)
 	return dot
 
 if __name__ == '__main__':
