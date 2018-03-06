@@ -13,6 +13,13 @@ class heuristics:
 		LEN -- 	Multipler applied to length (in segments) of match
 	"""
 	def __init__(self, filename = _default_file):
+		#If default config does not exist, create it
+		if filename == _default_file:
+			try:
+				open(filename, 'r')
+			except:
+				create_default_config()
+		
 		json_in = read_json(filename)
 		self._from_json(json_in['heuristics'])
 	def _from_json(self, json_in):
@@ -38,9 +45,9 @@ class output:
 	pass
 
 def read_json(filename):
-	with open(filename, 'r') as infile:
-		dat = infile.read()
 	try:
+		with open(filename, 'r') as infile:
+			dat = infile.read()
 		json_in = json.loads(dat)
 		return json_in
 	except Exception as e:
