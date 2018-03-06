@@ -1,3 +1,6 @@
+""" H Ratcliffe, University of Warwick, March 2018
+  Extraction and handling of routing info
+"""
 from urlparse import urlparse
 import re
 from copy import deepcopy

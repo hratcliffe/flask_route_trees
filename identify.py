@@ -1,3 +1,9 @@
+""" H Ratcliffe, University of Warwick, March 2018
+  Controls mapping from astroid asts to app structure
+  Handles identification of app details and endpoint
+  details such as their route, login_required states,
+  some type (html, json) inference etc
+"""
 import config
 import astroid
 import re

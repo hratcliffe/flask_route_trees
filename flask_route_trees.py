@@ -1,3 +1,7 @@
+""" H Ratcliffe, University of Warwick, March 2018
+Create simple graphs of routing trees for a single flask app
+"""
+
 from astroid import MANAGER
 
 import identify as id

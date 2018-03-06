@@ -1,3 +1,7 @@
+""" H Ratcliffe, University of Warwick, March 2018
+  Create and read config objects for heuristics and output
+"""
+
 import json
 
 _default_file = 'default.conf'

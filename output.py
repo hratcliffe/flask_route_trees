@@ -1,3 +1,7 @@
+""" H Ratcliffe, University of Warwick, March 2018
+  Controls output of tree. Currently uses
+  dot format for display
+"""
 import graphviz
 
 _oc = None
