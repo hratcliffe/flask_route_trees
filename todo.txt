@@ -14,9 +14,16 @@ DONE sorta Fix routing when parent is more than 1 level up
 
 Better matching of placeholder strings
 
+DONE Perhaps a config file to do heuristics and placeholder matches
+
 DONE Deal with trailing slash absence
 
 DONE Style according to return (page vs data)
 
 DONE Add Get/Post embelishments
 
+In route objects: add '+' operator to append to path etc
+
+DONE Break into files
+
+Add configure options for output
