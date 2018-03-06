@@ -109,9 +109,6 @@ def generate_routing(filename):
 		output_name = filename
 	dot.render(output_name, view=True)
 
-def reload_configs():
-	mh.reload_config()
-
 if __name__ == '__main__':
 
 	try: input = raw_input
