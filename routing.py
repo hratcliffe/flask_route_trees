@@ -19,13 +19,15 @@ class simple_node:
 		self.login = None
 		self.type = None
 		self.methods = None
-		
+		self.id = "" #ID for the tree this node should be in
 		self.parent = None
 		self.children = []
 
 	def set_name(self, name):
 		self.name = name
 		self.safe_name = self._make_safe(name)
+	def set_id(self, id):
+		self.id = id
 	def set_route(self, route):
 		self.route = route
 	def set_login(self, login):
@@ -183,3 +185,9 @@ def get_parent(route, all_routes):
 				all_matches.append(rt)
 	parent = mh.select_match(route, all_matches)
 	return parent
+
+def add_ids(node_dict, id):
+	
+	for key, value in node_dict.items():
+		value.set_id(id)
+	return node_dict

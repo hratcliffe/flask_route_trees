@@ -117,6 +117,7 @@ def get_methods(function):
 			meth = wd.value.as_string()
 	reg = re.compile('\[(.*)\]')
 	match = re.match(reg, meth)
+	grps = None
 	if match is not None:
 		grps = match.groups()[0].split(',')
 		for item in grps:
