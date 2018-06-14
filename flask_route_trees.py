@@ -8,6 +8,7 @@ import identify as id
 import match_heuristics as mh
 import output as out
 import routing as rt
+import generate_viewport_page as gvp
 
 from hashlib import md5
 
@@ -101,7 +102,7 @@ def unpack_routes_and_tree(all_nodes):
 		all_unpacked_routes.append(flask_route)
 	return all_unpacked_routes, route_tree
 
-def generate_routing(filename):
+def generate_routing(filename, with_webpage=True):
 	"""Parse file generate tree and create dot file and png
 	
 	Parameters:
@@ -117,6 +118,19 @@ def generate_routing(filename):
 		output_name = filename
 	dot.render(output_name, view=True)
 
+	if not with_webpage:
+		dot.format = 'png'
+		dot.render(output_name, view=True)
+	else:
+		dot.format = 'dot'
+		dot.render(output_name)
+
+		offset = gvp.extract_offset(dot.pipe().decode('utf-8'), tree[0].name)
+		gvp.generate_page_pieces(offset, output_name)
+
+		dot.format = 'png'
+		dot.render(output_name, view=True)
+
 def generate_partial_routing(filename):
 	"""Parse file generate tree and create dot string
 	
@@ -128,7 +142,7 @@ def generate_partial_routing(filename):
 	tree = parse_routing(ast)
 	return tree
 
-def generate_multiapp_routing(filename):
+def generate_multiapp_routing(filename, with_webpage = True):
 	"""Parse file, generate tree for each app, and create dot file and png
 	
 	Parameters:
@@ -183,7 +197,19 @@ def generate_multiapp_routing(filename):
 			linked.append(id_prefix)
 
 	output_name = 'Routes_'+filename
-	dot.render(output_name, view=True)
+	if not with_webpage:
+		dot.format = 'png'
+		dot.render(output_name, view=True)
+	else:
+		dot.format = 'dot'
+		dot.render(output_name)
+
+		offset = gvp.extract_offset(dot.pipe().decode('utf-8'), 'App')
+		gvp.generate_page_pieces(offset, output_name)
+
+		dot.format = 'png'
+		dot.render(output_name, view=True)
+
 
 if __name__ == '__main__':
 

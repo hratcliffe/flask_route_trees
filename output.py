@@ -6,11 +6,13 @@ import graphviz
 
 _oc = None
 
+_default_engine = 'dot'
+
 def tree_to_graphviz(tree):
 	""" Create a dot object from a tree
 	"""
 	dot = graphviz.Digraph(comment='Routing for App. Grey nodes require login. Ovals are pages, boxes are data (json). Embellishments indicate methods were specified', format='png', strict=True)
-	dot.attr(fontsize='12')
+	dot.attr(fontsize='10')
 	dot.node(tree[0].safe_name, shape='doubleoctagon')
 	for item in tree[1]:
 		box = 'oval'
@@ -35,8 +37,8 @@ def tree_to_graphviz(tree):
 def head_tree_graphviz(app):
 	""" Create a dot object describing top of tree for 'app'
 	"""
-	dot = graphviz.Digraph(comment='Routing for App. Grey nodes require login. Ovals are pages, boxes are data (json). Embellishments indicate methods were specified', format='png')
-	dot.attr(fontsize='12')
+	dot = graphviz.Digraph(comment='Routing for App. Grey nodes require login. Ovals are pages, boxes are data (json). Embellishments indicate methods were specified', format='dot', strict='true', engine=_default_engine)
+	dot.attr(fontsize='10')
 	dot.node(app, shape='doubleoctagon')
 	root = app
 	return (dot, root)
